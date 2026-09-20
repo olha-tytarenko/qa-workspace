@@ -4,8 +4,8 @@
 
 A person with an account in QA Workspace.
 
-A user may belong to multiple workspaces and may have a different role in each
-workspace.
+A user may belong to multiple workspaces, may own multiple workspaces, and may
+have a different role in each workspace.
 
 ## Workspace membership
 
@@ -14,21 +14,24 @@ The relationship between a user and a workspace.
 A workspace membership defines the user's workspace-level role, permissions,
 and membership status.
 
-Do not store workspace-specific roles or permissions directly on the user.
+A role belongs to the workspace membership, never directly to the user. Do not
+store workspace-specific roles or permissions on the user.
 
 ## Workspace role
 
 A set of permissions assigned to a workspace membership.
 
-Initial roles may include:
+The MVP roles are confirmed:
 
 * `owner`: manages the workspace, its members, and workspace-level settings;
 * `member`: creates and manages projects, features, requirements, and QA
   artifacts;
 * `viewer`: can inspect workspace content without modifying it.
 
-Treat the initial role model as provisional until authorization requirements
-are finalized.
+The exact permission set of each role, and how members are invited or removed,
+are defined with the authorization implementation and are not settled by this
+glossary. Adding a role beyond these three requires an explicit product
+decision.
 
 Professional functions such as Product Manager, Business Analyst, QA Engineer,
 and Software Engineer are user personas, not workspace roles.

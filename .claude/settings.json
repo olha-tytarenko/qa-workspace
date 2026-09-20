@@ -5,17 +5,19 @@
       "Bash(git status)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(npm run lint *)",
-      "Bash(npm run typecheck *)",
-      "Bash(npm run test *)",
-      "Bash(npm run format:check *)",
-      "Bash(pytest *)",
-      "Bash(ruff check *)",
-      "Bash(mypy *)"
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(uv run --no-sync ruff format --check .)",
+      "Bash(uv run --no-sync ruff check .)",
+      "Bash(uv run --no-sync mypy)",
+      "Bash(uv run --no-sync pytest)",
+      "Bash(uv run --no-sync pytest *)"
     ],
     "deny": [
       "Read(./.env)",
-      "Read(./.env.*)"
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)"
     ]
   }
 }

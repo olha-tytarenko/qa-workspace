@@ -30,6 +30,23 @@ Prioritize:
 
 Do not block a change solely because it differs from a preferred style.
 
+## Infrastructure status
+
+Currently in the repository: FastAPI, async SQLAlchemy with asyncpg, Alembic,
+and PostgreSQL. Redis, a task queue, background workers, SSE, and an AI
+provider are target architecture and are **not present unless the repository
+shows otherwise**.
+
+- Inspect the repository before assuming any of them exists.
+- The background-job, SSE, and AI-generation checks below apply when the
+  reviewed change uses or introduces that infrastructure. Apply them in full
+  then. Do not report a missing worker, queue, SSE stream, or provider as a
+  defect in code that does not use one.
+- A change that introduces any of them is in scope only if the task explicitly
+  approved it. Report unapproved introduction of Redis, a queue, workers, SSE,
+  or an AI provider as a scope finding, because mentioning a technology in a
+  skill does not authorize it.
+
 ## Required context
 
 Before reviewing:
@@ -439,7 +456,8 @@ database downgrades.
 
 ## Background-job review
 
-For AI generation and other jobs, verify:
+Applies when the change uses or introduces a job or worker system (see
+"Infrastructure status"). For AI generation and other jobs, verify:
 
 - the job is persisted before dispatch;
 - the payload uses stable identifiers rather than stale object snapshots;
@@ -457,7 +475,8 @@ A queue acknowledging a message does not prove the domain operation completed.
 
 ## SSE review
 
-Verify:
+Applies when the change uses or introduces an SSE stream (see "Infrastructure
+status"). Verify:
 
 - the stream is authenticated and workspace-authorized;
 - events contain stable resource or operation identifiers;
@@ -472,7 +491,8 @@ Treat SSE as a notification channel, not the authoritative store.
 
 ## AI-generation review
 
-Review the full AI boundary:
+Applies when the change uses or introduces AI-generation code; no AI provider
+is configured by default. Review the full AI boundary:
 
 ```text
 authorized context → prompt construction → provider call

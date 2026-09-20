@@ -13,14 +13,39 @@ description: >
 # QA Workspace Backend and API Patterns
 
 Build QA Workspace backend functionality using Python, FastAPI, Pydantic,
-SQLAlchemy, Alembic, PostgreSQL, Redis, and the configured background-job
-system.
+async SQLAlchemy 2 (asyncpg), Alembic, and PostgreSQL.
 
-Expose resource-oriented REST APIs for synchronous operations and persisted
-asynchronous jobs with SSE notifications for long-running AI operations.
+Expose resource-oriented REST APIs for synchronous operations. The target
+architecture runs long-running AI operations as persisted asynchronous jobs
+with SSE notifications; see "Infrastructure status" below before relying on it.
 
 Keep transport, application, domain, and persistence responsibilities
 separate.
+
+## Infrastructure status
+
+Currently configured: FastAPI, async SQLAlchemy with asyncpg, Alembic, and
+PostgreSQL.
+
+Target architecture, **not configured unless the repository shows otherwise**:
+Redis, a task queue (Celery, Dramatiq, or another), background workers, and
+SSE. The sections on jobs, generation runs, workers, cancellation, and SSE
+describe how to build these when they exist. They do not describe the current
+repository.
+
+- Before using or assuming any of them, inspect `compose.yaml`,
+  `pyproject.toml`, and the application code. Do not refer to a "configured"
+  queue, worker system, Redis client, or SSE helper that you did not find.
+- Introduce Redis, a queue, workers, or SSE only inside an explicit, scoped
+  implementation task that approves that infrastructure. Do not add it as a
+  side effect of another feature, and do not add a second queue framework once
+  one exists.
+- When the infrastructure does not exist, do not fake it. Implement only the
+  synchronous part of the task, or stop and report that the asynchronous
+  infrastructure is a prerequisite.
+- The architectural rules below (persisted job state, commit before enqueue,
+  duplicate delivery, SSE as a notification channel) still apply in full when
+  that infrastructure is introduced.
 
 ## Establish context
 
@@ -415,6 +440,23 @@ PostgreSQL and Redis without one.
 
 Rollback failed transactions and avoid reusing a failed SQLAlchemy session.
 
+## Use async SQLAlchemy
+
+Database access is async: SQLAlchemy 2 `AsyncEngine`, `async_sessionmaker`,
+and asyncpg.
+
+- Use one `AsyncSession` per request or per worker operation. In routes, obtain
+  it from the `get_session` dependency in `app/db/session.py`.
+- The session does not commit implicitly. The application use case opens the
+  transaction explicitly, for example `async with session.begin():`.
+- Do not make blocking database calls, or other blocking I/O, inside
+  `async def` code.
+- Do not add a second PostgreSQL driver unless a tool constraint requires it
+  and the reason is recorded.
+- Load settings through `get_settings()` and create engines and sessions only
+  at the application-lifecycle boundary, so importing modules never requires
+  infrastructure configuration. Domain modules must not import them.
+
 ## Avoid inefficient data access
 
 Inspect query behavior for list and nested-resource endpoints.
@@ -536,6 +578,10 @@ invariants.
 
 ## Model AI work as persisted asynchronous jobs
 
+This and the following job, worker, cancellation, and SSE sections apply when
+the corresponding infrastructure exists or a task explicitly introduces it (see
+"Infrastructure status"). Inspect the repository first.
+
 Do not call the LLM directly from a request that may exceed normal API latency
 or needs reliable retry, cancellation, or progress reporting.
 
@@ -567,8 +613,9 @@ The generation run is the authoritative record of job state.
 
 Redis and the task queue are delivery infrastructure, not the source of truth.
 
-Use the configured worker system. Do not introduce a second queue framework
-for one feature.
+Use the worker system found in the repository. If none exists, its
+introduction needs an explicit scoped task. Do not introduce a second queue
+framework for one feature.
 
 ## Define generation states explicitly
 
@@ -659,6 +706,9 @@ artifacts.
 Detailed prompt and evaluation rules belong to the AI-generation skill.
 
 ## Use SSE as a notification channel
+
+Applies once SSE infrastructure exists or is introduced by an explicit scoped
+task; do not assume an SSE implementation without inspecting the repository.
 
 Use SSE for one-way updates about persisted asynchronous work.
 

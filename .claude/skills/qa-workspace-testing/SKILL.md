@@ -27,6 +27,26 @@ Follow the testing principles used in large engineering organizations:
 - use production-like dependencies where their behavior matters;
 - optimize for useful confidence, not maximum coverage percentage.
 
+## Infrastructure status
+
+Currently in the repository: FastAPI, async SQLAlchemy with asyncpg, Alembic,
+PostgreSQL, and backend pytest tests. The frontend has no test runner.
+
+Target architecture, **not present unless the repository shows otherwise**:
+Redis, a task queue, background workers, SSE, and an AI provider. The sections
+on background jobs, SSE, AI generation, and the Redis/worker, SSE, and
+live-model CI workflows describe how to test these components when they exist
+or when an approved, scoped task introduces them.
+
+- Before writing tests for any of them, inspect `compose.yaml`,
+  `pyproject.toml`, and the application code to confirm the component exists.
+- Mentioning a technology here does not authorize installing or configuring
+  it. Redis, a worker or queue, SSE, or an AI provider may be introduced only by
+  an explicitly approved, scoped implementation task.
+- If a task needs one of them and it is absent, test the parts that exist and
+  report the missing infrastructure. Do not create fake infrastructure to have
+  something to test.
+
 ## Required context
 
 Before designing tests:
@@ -459,6 +479,9 @@ testing.
 
 ## Background job tests
 
+Applies when a job or worker system exists or is introduced by an approved,
+scoped task. Inspect the repository first; none is configured by default.
+
 Background jobs may be delivered more than once, delayed, retried, or executed
 after the initiating state has changed.
 
@@ -486,6 +509,9 @@ of worker invocations.
 
 ## SSE tests
 
+Applies when an SSE endpoint exists or is introduced by an approved, scoped
+task. Inspect the repository first; none is configured by default.
+
 Test SSE as a notification mechanism, not as the only source of truth.
 
 Verify:
@@ -505,6 +531,11 @@ disconnect or missed event.
 Do not require exact timing between worker completion and browser rendering.
 
 ## AI-generation tests
+
+Applies when AI-generation code exists or is introduced by an approved, scoped
+task. No AI provider is configured by default, and the provider is not selected.
+Test against a provider-independent interface and a fake, never against a
+provider assumed from this document.
 
 Normal CI must not depend on a live language model.
 
@@ -568,7 +599,9 @@ Recommended QA Workspace journeys include:
 7. coverage status reflects confirmed traceability;
 8. regeneration preserves previously approved work.
 
-Use a deterministic AI provider or controlled test mode for these flows.
+Use a deterministic AI provider or controlled test mode for these flows once
+the AI-generation feature exists. Journeys that depend on absent functionality
+cannot be written yet.
 
 ### Playwright practices
 
@@ -647,7 +680,9 @@ important behavior.
 
 ## Continuous integration
 
-Organize tests by cost and purpose.
+Organize tests by cost and purpose. This describes the target pipeline. No CI
+configuration exists in the repository yet, and each workflow below applies only
+to components that exist.
 
 ### Pull-request checks
 
@@ -665,9 +700,9 @@ Run:
 Run:
 
 - full PostgreSQL integration suite;
-- Redis and background-worker integration;
+- Redis and background-worker integration, once they exist;
 - migration verification;
-- SSE integration;
+- SSE integration, once it exists;
 - broader cross-service tests.
 
 ### End-to-end workflow
@@ -681,7 +716,8 @@ Run:
 
 ### AI evaluation workflow
 
-Run live-model evaluations separately:
+Once an AI provider has been introduced by an approved task, run live-model
+evaluations separately:
 
 - on prompt or model changes;
 - on a schedule;

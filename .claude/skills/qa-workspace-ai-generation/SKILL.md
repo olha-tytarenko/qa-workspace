@@ -26,6 +26,19 @@ AI proposes. Humans decide.
 Keep generation provider-agnostic unless the repository has explicitly selected
 a provider.
 
+## Infrastructure status
+
+Currently in the repository: no AI provider, prompt registry, generation-run
+model, provider adapter, evaluation cases, background worker, Redis, or SSE.
+These are target architecture.
+
+- Inspect the repository before assuming any of them exists.
+- Naming a provider or technology here does not authorize installing or
+  configuring it. Introducing an AI provider, or the job and SSE infrastructure
+  it depends on, requires an explicitly approved, scoped task.
+- The rules below apply when a task introduces or modifies the corresponding
+  component.
+
 ## Establish context
 
 Before changing an AI workflow:

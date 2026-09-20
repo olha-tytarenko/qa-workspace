@@ -15,6 +15,22 @@ description: >
 Build QA Workspace frontend functionality using React, TypeScript, Vite,
 TanStack Query, React Router, React Hook Form, and Zod.
 
+## Repository status
+
+Currently in the repository: React, TypeScript, and Vite only. The frontend is
+the unmodified Vite template. TanStack Query, React Router, React Hook Form,
+Zod, and a test runner are the target stack, not installed dependencies.
+Likewise, SSE, background jobs, and AI generation are not implemented on the
+backend.
+
+- Inspect `package.json` and the source before assuming a library, API client,
+  route, or backend transport exists.
+- Naming a technology here does not authorize adding it. Adding a dependency,
+  or building against a backend job or SSE capability that does not exist,
+  requires an explicitly approved, scoped task.
+- The rules below for those libraries and for async AI workflows apply when
+  they are present or a task introduces them.
+
 Prefer explicit data flow, clear ownership, accessible interactions, and
 feature-local organization over premature abstraction.
 
@@ -452,6 +468,10 @@ separate product actions.
 
 ## Represent async AI workflows explicitly
 
+Applies once the backend exposes generation jobs (not yet implemented; see
+"Repository status"). Confirm the actual API contract and transport in the
+repository before building against it.
+
 AI generation may continue beyond the initiating request.
 
 Model generation as a server-owned job with explicit states:
@@ -461,8 +481,8 @@ queued → processing → completed
                     → failed
 ```
 
-Use the confirmed backend transport, such as SSE, to receive progress or
-completion updates.
+Use the backend transport that actually exists to receive progress or
+completion updates. SSE is the target design, not a current capability.
 
 The UI must:
 
