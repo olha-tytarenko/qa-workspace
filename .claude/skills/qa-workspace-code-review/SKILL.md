@@ -517,7 +517,9 @@ Verify:
 
 ### Prompt injection
 
-Treat imported requirements and other user-provided text as untrusted data.
+Treat requirement text and other user-provided text as untrusted data
+(importing requirements is deferred and not part of the MVP; if it is ever
+introduced, imported text is untrusted too).
 
 Check that such content cannot:
 

@@ -24,6 +24,7 @@ services:
       - backend_venv:/app/.venv
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/qa_workspace
+      TEST_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/qa_workspace_test
       PYTHONUNBUFFERED: "1"
     depends_on:
       db:

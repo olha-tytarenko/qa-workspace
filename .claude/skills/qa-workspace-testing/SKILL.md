@@ -30,7 +30,14 @@ Follow the testing principles used in large engineering organizations:
 ## Infrastructure status
 
 Currently in the repository: FastAPI, async SQLAlchemy with asyncpg, Alembic,
-PostgreSQL, and backend pytest tests. The frontend has no test runner.
+PostgreSQL, and backend pytest tests, including a PostgreSQL test foundation
+(the guarded `qa_workspace_test` database, the `test_database` and `db_session`
+fixtures in `apps/backend/tests/conftest.py`, rollback-isolated sessions in
+`tests/database.py`). The frontend has Vitest, React Testing Library,
+`user-event`, `jest-dom`, and MSW. Playwright and factories are not present yet;
+factories arrive with the first model, as plain
+`async def create_<entity>(session, **overrides)` helpers. See
+`docs/decisions.md` for the test-database rules.
 
 Target architecture, **not present unless the repository shows otherwise**:
 Redis, a task queue, background workers, SSE, and an AI provider. The sections

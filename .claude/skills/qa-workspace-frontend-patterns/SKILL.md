@@ -17,14 +17,21 @@ TanStack Query, React Router, React Hook Form, and Zod.
 
 ## Repository status
 
-Currently in the repository: React, TypeScript, and Vite only. The frontend is
-the unmodified Vite template. TanStack Query, React Router, React Hook Form,
-Zod, and a test runner are the target stack, not installed dependencies.
-Likewise, SSE, background jobs, and AI generation are not implemented on the
-backend.
+Currently in the repository: React, TypeScript, and Vite, plus the installed
+foundation: TanStack Query, React Router (`react-router-dom`), React Hook Form,
+Zod, Vitest, React Testing Library, `user-event`, `jest-dom`, and MSW.
+The composition points are `src/app/AppProviders.tsx` (providers),
+`src/app/router.tsx` (routes), `src/app/queryClient.ts`, and
+`src/lib/api/client.ts` (`apiRequest`, `ApiError`). The single route still
+renders the unmodified Vite template screen: there are no product screens,
+forms, or domain API calls. React Hook Form and Zod are installed but unused
+until the first real form. Playwright is deferred. SSE, background jobs, and AI
+generation are not implemented on the backend.
 
 - Inspect `package.json` and the source before assuming a library, API client,
   route, or backend transport exists.
+- API conventions (the `/api` prefix, the error envelope, cookie sessions) are
+  fixed in `docs/decisions.md`.
 - Naming a technology here does not authorize adding it. Adding a dependency,
   or building against a backend job or SSE capability that does not exist,
   requires an explicitly approved, scoped task.

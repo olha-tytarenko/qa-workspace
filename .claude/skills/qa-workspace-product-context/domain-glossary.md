@@ -28,10 +28,10 @@ The MVP roles are confirmed:
   artifacts;
 * `viewer`: can inspect workspace content without modifying it.
 
-The exact permission set of each role, and how members are invited or removed,
-are defined with the authorization implementation and are not settled by this
-glossary. Adding a role beyond these three requires an explicit product
-decision.
+The baseline permission matrix is recorded in `docs/decisions.md`, which is
+authoritative for permissions. Invitation flows and detailed membership
+management are deferred. Adding a role beyond these three requires an explicit
+product decision.
 
 Professional functions such as Product Manager, Business Analyst, QA Engineer,
 and Software Engineer are user personas, not workspace roles.
@@ -47,6 +47,9 @@ A collection of related features and their product and QA artifacts within a
 workspace.
 
 A project belongs to exactly one workspace.
+
+The hierarchy is Workspace → Project → Feature → Requirement. Project remains in
+the domain, but project functionality is deferred from the first product slice.
 
 ## Feature
 

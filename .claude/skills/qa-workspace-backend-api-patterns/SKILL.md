@@ -140,6 +140,11 @@ Primary resources may include:
 - coverage links;
 - generation runs.
 
+Accepted conventions (see `docs/decisions.md`): every endpoint is served under
+the `/api` prefix (the examples below omit it for brevity), persisted entity
+primary keys are UUIDv4, CRUD uses ordinary RESTful routes, and `:action` routes
+are reserved for genuine domain commands.
+
 Prefer standard HTTP operations where their semantics fit:
 
 ```text
@@ -319,8 +324,9 @@ For example, before creating a coverage link, verify that:
 Do not accept arbitrary foreign keys from the request and persist them before
 checking ownership.
 
-Choose a consistent policy for whether unauthorized resources return `403` or
-`404`. Do not leak resource existence accidentally.
+Policy (accepted, see `docs/decisions.md`): a request for a workspace resource
+by a non-member returns `404`, never `403`, so existence is not leaked. `403`
+is only for an authenticated member who lacks the role required for the action.
 
 ## Use predictable HTTP semantics
 
@@ -347,7 +353,9 @@ Do not expose internal stack traces or exception strings.
 
 ## Standardize error responses
 
-Use one machine-readable error envelope across the API.
+Use one machine-readable error envelope across the API. Its shape below is the
+fixed API error format (see `docs/decisions.md`); the values are illustrative.
+`request_id` is a correlation identifier, not an entity primary key.
 
 For example:
 
@@ -554,7 +562,7 @@ Support idempotency keys for operations where clients or infrastructure may
 retry a non-idempotent request, including:
 
 - starting a generation run;
-- importing requirements;
+- importing requirements (deferred; not part of the MVP);
 - creating expensive background work;
 - executing a retryable external side effect.
 
@@ -828,7 +836,7 @@ Bound all user-controlled resource consumption.
 Set reasonable limits for:
 
 - request-body size;
-- imported requirement count;
+- imported requirement count (once importing exists; it is deferred);
 - individual text length;
 - generated item count;
 - page size;

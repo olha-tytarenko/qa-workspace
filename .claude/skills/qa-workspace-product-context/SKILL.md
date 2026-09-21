@@ -66,7 +66,7 @@ Treat these as product constraints, not implementation suggestions.
 Place relevant product behavior within this workflow:
 
 1. Create a feature.
-2. Add or import requirements.
+2. Add requirements manually. Importing requirements is not part of the MVP.
 3. Analyze requirements for ambiguity, omissions, contradictions, testability,
    and edge cases.
 4. Present findings and clarification questions for human review.

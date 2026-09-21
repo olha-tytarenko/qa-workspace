@@ -1,3 +1,9 @@
 # Python bytecode
 __pycache__/
 *.py[cod]
+
+# Environment files: real ones are never committed, at any depth.
+# Only the documented `.env.example` files are tracked.
+.env
+.env.*
+!.env.example

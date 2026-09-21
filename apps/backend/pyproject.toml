@@ -24,6 +24,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: needs the PostgreSQL test database (TEST_DATABASE_URL, via Docker Compose)",
+]
 
 [tool.ruff]
 target-version = "py313"
