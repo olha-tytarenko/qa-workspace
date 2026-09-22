@@ -13,13 +13,14 @@ description: >
 # QA Workspace Frontend Patterns
 
 Build QA Workspace frontend functionality using React, TypeScript, Vite,
-TanStack Query, React Router, React Hook Form, and Zod.
+TanStack Query, React Router, React Hook Form, Zod, and Tailwind CSS.
 
 ## Repository status
 
 Currently in the repository: React, TypeScript, and Vite, plus the installed
 foundation: TanStack Query, React Router (`react-router-dom`), React Hook Form,
-Zod, Vitest, React Testing Library, `user-event`, `jest-dom`, and MSW.
+Zod, Tailwind CSS (v4, via `@tailwindcss/vite`), Vitest, React Testing Library,
+`user-event`, `jest-dom`, and MSW.
 The composition points are `src/app/AppProviders.tsx` (providers),
 `src/app/router.tsx` (routes), `src/app/queryClient.ts`, and
 `src/lib/api/client.ts` (`apiRequest`, `ApiError`). The single route still
@@ -125,6 +126,46 @@ When features need to coordinate, use:
 
 Avoid circular dependencies and deep imports into another module's internals.
 
+## Use absolute paths across folders, relative within the same folder
+
+Use the `@/` path alias (mapped to `src/`, configured in both
+`tsconfig.app.json`'s `paths` and Vite's `resolve.alias` in
+`vite.config.ts`, which also covers Vitest since it shares that config) for
+any project-internal import that crosses a directory boundary — feature
+code, shared infrastructure, types, and style imports living outside the
+current folder.
+
+Use a relative import (`./`) only for a sibling in the exact same folder
+(for example, one component importing another component or its
+`.module.css` file out of the same `components/` directory) — that path
+stays short and correct regardless of where the folder itself later moves.
+Never use a `../` (parent-relative) import for a project module; cross a
+directory boundary with the `@/` alias instead.
+
+Group imports into up to three blocks, separated by exactly one blank line,
+in this order:
+
+1. Third-party packages (`react`, `react-router-dom`, `react-hook-form`,
+   `zod`, and similar).
+2. Project modules — `@/...` for anything outside the current folder,
+   `./...` for a same-folder sibling.
+3. Style imports (`.css`, `.module.css`); the same same-folder-vs-`@/` rule
+   applies to them.
+
+Omit a block that has no imports for a given file; do not leave a blank line
+in its place.
+
+```ts
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+import { ApiError } from '@/lib/api/client.ts'
+import { useRegisterMutation } from '@/features/auth/api/register.ts'
+import { TextField } from './TextField.tsx'
+
+import styles from './SignUpForm.module.css'
+```
+
 ## Design components around responsibility
 
 Create a component when it has a distinct responsibility, meaningful behavior,
@@ -144,6 +185,12 @@ Do not split components solely to reduce line count.
 
 Do not create wrapper components that only rename an existing component
 without adding semantics, behavior, accessibility, or styling constraints.
+
+Give each component its own file: at most one exported component per file.
+When a component is split out under the rules above, move it to its own file
+rather than defining multiple components in one module. A small private
+subcomponent that exists only to be inlined as JSX inside its one caller, and
+is never referenced elsewhere, is the sole exception.
 
 Prefer composition over large components controlled by many boolean props.
 
@@ -595,6 +642,27 @@ technology.
 Do not use placeholder text as the only label.
 
 Do not add ARIA when native HTML already provides the required semantics.
+
+## Style with Tailwind CSS
+
+Style components with Tailwind utility classes in JSX, not plain CSS or CSS
+Modules. Tailwind is wired through `@tailwindcss/vite` in `vite.config.ts`
+and `@import "tailwindcss";` in `src/index.css`; no separate
+`tailwind.config.js` or `@theme` customization exists yet — use Tailwind's
+default scale (spacing, color palette, radius, shadow, breakpoints) unless a
+real, recorded design-token need justifies adding one.
+
+Do not create a `.module.css` file for a component's own styling. Reserve
+plain CSS in `src/index.css` for what Tailwind's utility classes cannot
+express (the Tailwind import itself, and genuinely global, one-off
+concerns such as the `#root` layout container).
+
+Prefer an arbitrary-value utility (`bg-[#f5f5f7]`) over a plain CSS rule when
+matching a specific design value with no matching token.
+
+When the same utility combination repeats across a component, extract a
+React component for it (per "Design components around responsibility"), not
+a `@apply`-based CSS class.
 
 ## Use the design system first
 
