@@ -154,3 +154,19 @@ Test concurrency: **run only one backend integration-test session at a time.** T
 These rules are guardrails, not a security boundary: command patterns can be sidestepped (for example by different spelling, a wrapped shell, or SQL typed inside `psql`). They deliberately do not block ordinary code search or diagnostics. Do not attempt to work around a denial. Ask.
 
 Also, regardless of what the rules block: do not print environment variables wholesale, do not run `docker compose config` or `docker inspect` without need (they can expose secrets), and do not touch the `postgres_data` volume.
+
+
+## Git workflow
+
+- `main` must remain stable and releasable.
+- Do not implement tasks directly on `main`.
+- Create one short-lived branch per approved task from the latest `main`.
+- Branch names use `<type>/<short-kebab-case-description>`.
+- Allowed types: `feature`, `fix`, `refactor`, `test`, `docs`, `chore`, `ci`, and `build`.
+- Keep each branch limited to one logical task.
+- Do not create, switch, rename, delete, rebase, merge, or push branches without explicit approval.
+- Do not commit unless explicitly instructed.
+- Before requesting review, run all verification required by the task and report the results.
+- Merge through a pull request using squash merge.
+- Delete the branch after merge.
+- Never force-push or rewrite `main`.
