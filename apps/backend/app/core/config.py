@@ -8,6 +8,9 @@ ASYNC_DATABASE_URL_PREFIX = "postgresql+asyncpg://"
 
 class Settings(BaseSettings):
     database_url: str
+    # Comma-separated explicit origin allowlist. Credentialed CORS must never
+    # combine with a wildcard, so this is always parsed into a concrete list.
+    cors_allowed_origins: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -24,6 +27,14 @@ class Settings(BaseSettings):
                 "the backend uses SQLAlchemy's async API with asyncpg"
             )
         return value
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.cors_allowed_origins.split(",")
+            if origin.strip()
+        ]
 
 
 @lru_cache

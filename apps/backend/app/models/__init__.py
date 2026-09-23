@@ -7,3 +7,7 @@ as far as migrations are concerned.
 
 Models inherit `Base` from `app.db.base` and use `uuid_pk()` for primary keys.
 """
+
+from app.models.user import User
+
+__all__ = ["User"]
