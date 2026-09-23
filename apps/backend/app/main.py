@@ -3,7 +3,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.auth import router as auth_router
 from app.core.config import get_settings
+from app.core.cors import LazyCORSMiddleware
+from app.core.errors import register_exception_handlers
 from app.db.session import create_engine, create_session_factory
 
 
@@ -16,6 +19,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_engine(settings)
     app.state.engine = engine
     app.state.session_factory = create_session_factory(engine)
+    app.state.cors_origins = settings.cors_origins
 
     try:
         yield
@@ -25,6 +29,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="QA Workspace API", lifespan=lifespan)
+    app.add_middleware(LazyCORSMiddleware)
+    register_exception_handlers(app)
+    app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
     @app.get("/health")
     async def health() -> dict[str, str]:
