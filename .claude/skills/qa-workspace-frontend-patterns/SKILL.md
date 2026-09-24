@@ -136,21 +136,32 @@ code, shared infrastructure, types, and style imports living outside the
 current folder.
 
 Use a relative import (`./`) only for a sibling in the exact same folder
-(for example, one component importing another component or its
-`.module.css` file out of the same `components/` directory) — that path
-stays short and correct regardless of where the folder itself later moves.
-Never use a `../` (parent-relative) import for a project module; cross a
-directory boundary with the `@/` alias instead.
+(for example, one component importing another component out of the same
+`components/sign-up/` directory) — that path stays short and correct
+regardless of where the folder itself later moves. Never use a `../`
+(parent-relative) import for a project module; cross a directory boundary
+with the `@/` alias instead.
+
+When a folder groups one sub-feature's components (for example
+`components/sign-up/`, `components/sign-in/`, `components/common/`), give it
+an `index.tsx` that only re-exports its public components — plain
+`export { X } from './X.tsx'` lines, never a component definition of its
+own. A cross-folder import then targets the folder itself through the `@/`
+alias, with no file name (`@/features/auth/components/common`), relying on
+directory/index resolution. A same-folder import — including inside the
+folder's own `index.tsx` — still targets the specific file directly.
 
 Group imports into up to three blocks, separated by exactly one blank line,
 in this order:
 
 1. Third-party packages (`react`, `react-router-dom`, `react-hook-form`,
    `zod`, and similar).
-2. Project modules — `@/...` for anything outside the current folder,
-   `./...` for a same-folder sibling.
+2. Project modules — `@/...` for anything outside the current folder
+   (including a barrel import from another folder's `index.tsx`), `./...`
+   for a same-folder sibling.
 3. Style imports (`.css`, `.module.css`); the same same-folder-vs-`@/` rule
-   applies to them.
+   applies to them. Rare now that styling uses Tailwind (see below), but
+   still the convention for a genuine global stylesheet import.
 
 Omit a block that has no imports for a given file; do not leave a blank line
 in its place.
@@ -160,10 +171,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { ApiError } from '@/lib/api/client.ts'
-import { useRegisterMutation } from '@/features/auth/api/register.ts'
-import { TextField } from './TextField.tsx'
-
-import styles from './SignUpForm.module.css'
+import { AuthLayout, TextField } from '@/features/auth/components/common'
+import { PasswordField } from './PasswordField.tsx'
 ```
 
 ## Design components around responsibility

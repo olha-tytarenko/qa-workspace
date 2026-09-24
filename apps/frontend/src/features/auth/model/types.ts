@@ -1,14 +1,23 @@
-export interface RegisterRequest {
-  email: string
-  password: string
-}
-
-export interface RegisteredUser {
+export interface PublicUser {
   id: string
   email: string
   created_at: string
 }
 
+export interface RegisterRequest {
+  email: string
+  password: string
+}
+
 export interface RegisterResponse {
-  data: RegisteredUser
+  data: PublicUser
+}
+
+export interface LoginRequest {
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  data: PublicUser
 }

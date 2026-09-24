@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import type { Resolver } from 'react-hook-form'
+
+import { createZodResolver } from '@/lib/forms/zodResolver.ts'
 
 // Backend validation counts Unicode code points (Python `len()`); `.length`
 // on a JS string counts UTF-16 code units, which differs for characters
@@ -34,18 +35,4 @@ export const signUpSchema = z
 
 export type SignUpFormValues = z.infer<typeof signUpSchema>
 
-// No `@hookform/resolvers` dependency is installed (out of this slice's
-// approved scope), so this adapts `signUpSchema` to react-hook-form's
-// `Resolver` shape directly: one first issue per field path, matching how
-// react-hook-form surfaces a single message per field.
-export const signUpResolver: Resolver<SignUpFormValues> = (values) => {
-  const result = signUpSchema.safeParse(values)
-  if (result.success) return { values: result.data, errors: {} }
-
-  const errors: Record<string, { type: string; message: string }> = {}
-  for (const issue of result.error.issues) {
-    const path = issue.path.join('.')
-    if (!errors[path]) errors[path] = { type: issue.code, message: issue.message }
-  }
-  return { values: {}, errors }
-}
+export const signUpResolver = createZodResolver(signUpSchema)
