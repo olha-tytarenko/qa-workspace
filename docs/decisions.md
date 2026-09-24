@@ -23,12 +23,12 @@ Changing an accepted decision needs an explicit human decision. Record the chang
 
 ## 2. Sessions and security
 
-**Accepted.** Password hashing and CORS are implemented as of the registration slice (see §8); sessions, cookies and origin validation for authenticated requests are not.
+**Accepted.** Password hashing, CORS, and sessions/cookies are implemented as of the registration and login slices (see §8); origin validation for authenticated mutating requests is not.
 
-- Session tokens are opaque random values. Only a cryptographic hash of each token is stored in the database.
-- Session cookie: `HttpOnly`, `SameSite=Lax`, `Secure` in production.
-- Session TTL: 14 days.
-- Mutating cookie-authenticated requests must validate the request `Origin`. **Deferred** until session authentication exists — not required, and not implemented, for the unauthenticated registration slice.
+- Session tokens are opaque random values. Only a cryptographic hash of each token is stored in the database. **Implemented**: a `secrets.token_urlsafe(32)` token, SHA-256-hashed at rest (`app/core/security.py`) — deliberately not Argon2id, since the token's own entropy makes a fast deterministic hash correct here, unlike passwords.
+- Session cookie: `HttpOnly`, `SameSite=Lax`, `Secure` in production. **Implemented**: `Secure` is controlled by the `session_cookie_secure` setting (`false` by default for local HTTP development).
+- Session TTL: 14 days. **Implemented** as a fixed constant (`SESSION_TTL`), not per-environment configuration.
+- Mutating cookie-authenticated requests must validate the request `Origin`. **Still deferred**: login itself creates the session rather than using an existing one, and no endpoint yet performs a mutation authenticated by an existing session cookie.
 - Password hashing uses Argon2id through `argon2-cffi`. **Implemented.**
 - A request for a workspace resource by a non-member returns `404`, not `403`, so resource existence is not leaked. `403` is only for a member who lacks the role required for an action.
 - CORS: the first product API slice must configure FastAPI CORS with an explicit frontend-origin allowlist supplied through configuration. Local development allows the configured Vite origin. Credentialed requests are enabled, so wildcard origins must never be used. Production origins come from environment-specific configuration and are never hard-coded. **Implemented.** CORS begins with the first *browser-consumed* product API slice, not specifically the first cookie-authenticated one: the Vite dev server and backend are different origins regardless of whether the slice uses cookies, so a browser cannot call the API cross-origin without it. Cookie-specific security behavior (the `HttpOnly`/`SameSite`/`Secure` cookie itself, and `Origin` validation on authenticated mutating requests) begins with the first cookie-authenticated slice, still to come.
@@ -110,22 +110,22 @@ Additional rules:
 - Dependencies: TanStack Query, `react-router-dom`, React Hook Form, Zod (installed, unused until the first real form), Vitest and the testing libraries above.
 - Composition points: `src/app/AppProviders.tsx`, `src/app/router.tsx`, `src/app/queryClient.ts`.
 - API client convention: `src/lib/api/client.ts` (`apiRequest`, `ApiError`). It reads `VITE_API_URL` on use, prefixes `/api`, always sends cookies, and turns non-2xx responses into `ApiError` from the error envelope.
-- `/` still renders the unmodified Vite template screen; `/auth/sign-up` is the first product screen (see §8).
+- `/` still renders the unmodified Vite template screen; `/auth/sign-up` and `/auth/sign-in` are the first product screens (see §8).
 
 ## 8. Current implementation
 
 Verified in the repository:
 
-- Backend: FastAPI with `GET /health`; `POST /api/auth/register` (email+password registration, Argon2id hashing, the fixed error and `data` envelopes); the `users` table and its migration; CORS middleware with a configurable origin allowlist; async SQLAlchemy engine and session foundation; lazy settings; the PostgreSQL test foundation described above.
-- Frontend: the Vite template at `/`, plus the `/auth/sign-up` screen (form, validation, success and duplicate/generic-error states) built on the foundation from section 7. `/auth/sign-in` is referenced but not implemented.
+- Backend: FastAPI with `GET /health`; `POST /api/auth/register` (email+password registration, Argon2id hashing, the fixed error and `data` envelopes); `POST /api/auth/login` (credential verification, session creation, the `HttpOnly`/`SameSite=Lax` session cookie); the `users` and `sessions` tables and their migrations; CORS middleware with a configurable origin allowlist; async SQLAlchemy engine and session foundation; lazy settings; the PostgreSQL test foundation described above.
+- Frontend: the Vite template at `/`, the `/auth/sign-up` screen (form, validation, success and duplicate/generic-error states), the `/auth/sign-in` screen (form, validation, password-visibility toggle, invalid-credentials and generic-error banners, redirect to `/workspaces` on success), and `/workspaces` as an intentionally empty placeholder route — no workspace data model, API, or fetching exists yet.
 - Docker Compose dev stack: frontend, backend, Postgres.
 
 ## 9. Deferred
 
 Not built, and not to be introduced without an explicit, scoped task:
 
-- Sessions, login, `/api/auth/me`, logout, protected routes, workspaces, memberships, projects, features, requirements, and every API beyond `/health` and `/api/auth/register`. (Users and registration are implemented — see §8.)
-- Invitation flows, email verification, password reset, requirement import.
+- `/api/auth/me`, logout, protected-route guards (`/workspaces` is currently unguarded since it renders nothing), workspaces, memberships, projects, features, requirements, and every API beyond `/health`, `/api/auth/register`, and `/api/auth/login`. (Users, registration, and login are implemented — see §8.)
+- Invitation flows, email verification, password reset, "remember me" / variable session length, requirement import.
 - Follow-up considerations, not readiness blockers: API-client normalization of network failures and non-JSON successful responses; restricting the test database by host; a test that detects a forgotten model import; mutation-testing the database fixtures; parallel test-database provisioning.
 - AI generation, imports, Redis, Celery or any task queue, workers, SSE.
 - Playwright, CI/CD, seeded application users, logging and observability infrastructure, request-ID middleware (the current per-error `uuid4` in `app/core/errors.py` is a documented stand-in, not that infrastructure).

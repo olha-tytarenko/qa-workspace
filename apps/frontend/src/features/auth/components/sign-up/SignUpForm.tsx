@@ -5,14 +5,11 @@ import { useForm, useWatch } from 'react-hook-form'
 import { ApiError } from '@/lib/api/client.ts'
 import { useRegisterMutation } from '@/features/auth/api/register.ts'
 import { signUpResolver, type SignUpFormValues } from '@/features/auth/schemas/signUpSchema.ts'
-import { AuthLayout } from './AuthLayout.tsx'
-import { ErrorBanner } from './ErrorBanner.tsx'
+import { AuthLayout, ErrorBanner, TextField } from '@/features/auth/components/common'
 import { PasswordField } from './PasswordField.tsx'
 import { SignUpSuccess } from './SignUpSuccess.tsx'
-import { TextField } from './TextField.tsx'
 
 export function SignUpForm() {
-  const [succeeded, setSucceeded] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const bannerRef = useRef<HTMLDivElement>(null)
   const registerMutation = useRegisterMutation()
@@ -40,7 +37,6 @@ export function SignUpForm() {
     setFormError(null)
     try {
       await registerMutation.mutateAsync({ email: values.email, password: values.password })
-      setSucceeded(true)
     } catch (error) {
       if (error instanceof ApiError && error.code === 'EMAIL_ALREADY_REGISTERED') {
         setError('email', { type: 'server', message: 'This email is already registered.' })
@@ -51,7 +47,7 @@ export function SignUpForm() {
     }
   }
 
-  if (succeeded) {
+  if (registerMutation.isSuccess) {
     return (
       <AuthLayout>
         <SignUpSuccess />
