@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     # Comma-separated explicit origin allowlist. Credentialed CORS must never
     # combine with a wildcard, so this is always parsed into a concrete list.
     cors_allowed_origins: str = "http://localhost:5173"
+    # Marks the session cookie `Secure`. False by default for local HTTP
+    # development; set true wherever the app is actually served over HTTPS.
+    session_cookie_secure: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

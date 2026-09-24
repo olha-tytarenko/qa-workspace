@@ -1,4 +1,9 @@
-from app.core.security import hash_password, verify_password
+from app.core.security import (
+    generate_session_token,
+    hash_password,
+    hash_session_token,
+    verify_password,
+)
 
 # A non-BMP character (an emoji, U+1F600) so backend/frontend password-length
 # handling can be proven consistent: Python's `len()` counts it as one code
@@ -30,3 +35,22 @@ def test_hash_and_verify_round_trip_a_password_with_a_non_bmp_character() -> Non
 
     assert verify_password(NON_BMP_PASSWORD, hashed) is True
     assert len(NON_BMP_PASSWORD) == 22  # Python counts the emoji as one code point.
+
+
+def test_generate_session_token_produces_distinct_high_entropy_tokens() -> None:
+    tokens = {generate_session_token() for _ in range(100)}
+
+    assert len(tokens) == 100
+    assert all(len(token) >= 40 for token in tokens)  # token_urlsafe(32) ~= 43 chars
+
+
+def test_hash_session_token_is_a_deterministic_sha256_hex_digest() -> None:
+    token = generate_session_token()
+
+    first = hash_session_token(token)
+    second = hash_session_token(token)
+
+    assert first == second
+    assert first != token
+    assert len(first) == 64
+    assert all(character in "0123456789abcdef" for character in first)
