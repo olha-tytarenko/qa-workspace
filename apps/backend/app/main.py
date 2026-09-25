@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.auth import router as auth_router
+from app.api.workspaces import router as workspaces_router
 from app.core.config import get_settings
 from app.core.cors import LazyCORSMiddleware
 from app.core.errors import register_exception_handlers
@@ -32,6 +33,7 @@ def create_app() -> FastAPI:
     app.add_middleware(LazyCORSMiddleware)
     register_exception_handlers(app)
     app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+    app.include_router(workspaces_router, prefix="/api/workspaces", tags=["workspaces"])
 
     @app.get("/health")
     async def health() -> dict[str, str]:

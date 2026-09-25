@@ -17,7 +17,7 @@ Changing an accepted decision needs an explicit human decision. Record the chang
 - Authentication uses email and password. Authentication state uses server-managed sessions in HttpOnly cookies.
 - Hierarchy: Workspace → Project → Feature → Requirement. Project remains part of the domain; project functionality is not part of the first product slice.
 - Workspace roles are `owner`, `member`, `viewer`. A role belongs to a workspace membership, never directly to a user. A user may own or belong to multiple workspaces.
-- Workspace creation is explicit.
+- Workspace creation is explicit. **Implemented**: `POST /api/workspaces` creates a workspace and an `owner` membership for the caller in one transaction (see §8).
 - Requirements are created manually. Importing requirements is deferred, not MVP functionality. A requirement may have an optional type (its allowed values are not yet defined).
 - Open user registration is allowed in the MVP. Email verification is deferred.
 
@@ -35,7 +35,7 @@ Changing an accepted decision needs an explicit human decision. Record the chang
 
 ## 3. Permission matrix
 
-**Accepted** baseline, not yet implemented. Detailed membership-management UX and invitation flows are deferred.
+**Accepted** baseline. Only the owner-creates-workspace path is implemented so far (`POST /api/workspaces` always creates the caller as `owner` — see §8); every other cell (member/viewer actions, role changes, deletion) has no endpoint yet. Detailed membership-management UX and invitation flows are deferred.
 
 | Capability | `owner` | `member` | `viewer` |
 |---|---|---|---|
@@ -73,7 +73,13 @@ Additional rules:
   { "data": { "id": "...", "...": "..." } }
   ```
 
-  List, pagination and metadata envelopes are not defined until a real endpoint needs them.
+  List responses use a top-level `items` array, established by `GET /api/workspaces`:
+
+  ```json
+  { "items": [ { "id": "...", "...": "..." } ] }
+  ```
+
+  No pagination or cursor fields yet — a user's own workspace count is small and unbounded pagination isn't warranted until a real endpoint needs it.
 
 ## 5. SQLAlchemy, Alembic and transactions
 
@@ -116,16 +122,16 @@ Additional rules:
 
 Verified in the repository:
 
-- Backend: FastAPI with `GET /health`; `POST /api/auth/register` (email+password registration, Argon2id hashing, the fixed error and `data` envelopes); `POST /api/auth/login` (credential verification, session creation, the `HttpOnly`/`SameSite=Lax` session cookie); the `users` and `sessions` tables and their migrations; CORS middleware with a configurable origin allowlist; async SQLAlchemy engine and session foundation; lazy settings; the PostgreSQL test foundation described above.
-- Frontend: the Vite template at `/`, the `/auth/sign-up` screen (form, validation, success and duplicate/generic-error states), the `/auth/sign-in` screen (form, validation, password-visibility toggle, invalid-credentials and generic-error banners, redirect to `/workspaces` on success), and `/workspaces` as an intentionally empty placeholder route — no workspace data model, API, or fetching exists yet.
+- Backend: FastAPI with `GET /health`; `POST /api/auth/register`; `POST /api/auth/login` (credential verification, session creation, the `HttpOnly`/`SameSite=Lax` session cookie); `POST /api/workspaces` and `GET /api/workspaces` (create, and list the caller's own workspaces with their role and member count), both behind `get_current_user` (`app/api/dependencies.py` — resolves the session cookie, the first code that checks `Session.expires_at`); the `users`, `sessions`, `workspaces`, and `workspace_memberships` tables and their migrations; CORS middleware with a configurable origin allowlist; async SQLAlchemy engine and session foundation; lazy settings; the PostgreSQL test foundation described above.
+- Frontend: the Vite template at `/`, the `/auth/sign-up` screen, the `/auth/sign-in` screen (redirects to `/workspaces` on success), and `/workspaces` — a real screen listing the caller's workspaces (or an empty-state prompt) with a "+ New workspace" modal (name, optional description). An unauthenticated visitor is redirected to `/auth/sign-in` by the list request's own `401`; there is no separate `/api/auth/me` or reusable route-guard yet (see §9).
 - Docker Compose dev stack: frontend, backend, Postgres.
 
 ## 9. Deferred
 
 Not built, and not to be introduced without an explicit, scoped task:
 
-- `/api/auth/me`, logout, protected-route guards (`/workspaces` is currently unguarded since it renders nothing), workspaces, memberships, projects, features, requirements, and every API beyond `/health`, `/api/auth/register`, and `/api/auth/login`. (Users, registration, and login are implemented — see §8.)
-- Invitation flows, email verification, password reset, "remember me" / variable session length, requirement import.
+- `/api/auth/me`, logout, a reusable protected-route guard (each screen currently derives "not authenticated" from its own request's `401` rather than a shared primitive), memberships beyond the creator's own `owner` row, invitation flows, workspace editing/deletion, projects, features, requirements, and every API beyond `/health`, `/api/auth/register`, `/api/auth/login`, and `/api/workspaces`. (Users, registration, login, and workspace creation are implemented — see §8.)
+- Email verification, password reset, "remember me" / variable session length, requirement import.
 - Follow-up considerations, not readiness blockers: API-client normalization of network failures and non-JSON successful responses; restricting the test database by host; a test that detects a forgotten model import; mutation-testing the database fixtures; parallel test-database provisioning.
 - AI generation, imports, Redis, Celery or any task queue, workers, SSE.
 - Playwright, CI/CD, seeded application users, logging and observability infrastructure, request-ID middleware (the current per-error `uuid4` in `app/core/errors.py` is a documented stand-in, not that infrastructure).

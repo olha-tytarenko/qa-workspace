@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { Brand } from './Brand.tsx'
+import { Brand } from '@/components/Brand.tsx'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   return (
