@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.dependencies import get_current_user
+from app.api.dependencies import get_current_user, require_trusted_origin
 from app.db.session import get_session
 from app.models.user import User
 from app.schemas.workspace import (
@@ -21,6 +21,7 @@ router = APIRouter()
     "",
     status_code=status.HTTP_201_CREATED,
     response_model=WorkspaceResponse,
+    dependencies=[Depends(require_trusted_origin)],
 )
 async def create(
     payload: WorkspaceCreateRequest,

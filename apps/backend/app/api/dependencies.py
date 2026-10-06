@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import Cookie, Depends, status
+from fastapi import Cookie, Depends, Header, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import Settings, get_settings
 from app.core.errors import ApplicationError
 from app.core.security import SESSION_COOKIE_NAME, hash_session_token
 from app.db.session import get_session
@@ -18,6 +19,29 @@ class UnauthenticatedError(ApplicationError):
 
     def __init__(self) -> None:
         super().__init__("Authentication is required.")
+
+
+class OriginNotAllowedError(ApplicationError):
+    status_code = status.HTTP_403_FORBIDDEN
+    code = "ORIGIN_NOT_ALLOWED"
+
+    def __init__(self) -> None:
+        super().__init__("The request origin is not allowed.")
+
+
+async def require_trusted_origin(
+    settings: Annotated[Settings, Depends(get_settings)],
+    origin: Annotated[str | None, Header()] = None,
+) -> None:
+    """Reject a cookie-authenticated mutation from an untrusted `Origin`.
+
+    CSRF protection for state-changing requests that rely on the session
+    cookie (docs/decisions.md §2). The trusted origins are the CORS allowlist.
+    A missing `Origin` is rejected too: browsers send it on every `POST`, so
+    its absence never comes from the legitimate frontend.
+    """
+    if origin is None or origin not in settings.cors_origins:
+        raise OriginNotAllowedError()
 
 
 async def get_current_user(
