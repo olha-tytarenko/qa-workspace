@@ -10,5 +10,7 @@ Models inherit `Base` from `app.db.base` and use `uuid_pk()` for primary keys.
 
 from app.models.session import Session
 from app.models.user import User
+from app.models.workspace import Workspace
+from app.models.workspace_membership import WorkspaceMembership
 
-__all__ = ["Session", "User"]
+__all__ = ["Session", "User", "Workspace", "WorkspaceMembership"]

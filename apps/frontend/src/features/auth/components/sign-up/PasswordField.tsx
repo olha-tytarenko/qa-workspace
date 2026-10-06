@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes } from 'react'
 
-import { TextField } from '@/features/auth/components/common'
+import { TextField } from '@/components/TextField.tsx'
 
 interface PasswordFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   id: string

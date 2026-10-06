@@ -5,7 +5,9 @@ import { useForm } from 'react-hook-form'
 import { ApiError } from '@/lib/api/client.ts'
 import { useLoginMutation } from '@/features/auth/api/login.ts'
 import { signInResolver, type SignInFormValues } from '@/features/auth/schemas/signInSchema.ts'
-import { AuthLayout, ErrorBanner, TextField } from '@/features/auth/components/common'
+import { ErrorBanner } from '@/components/ErrorBanner.tsx'
+import { TextField } from '@/components/TextField.tsx'
+import { AuthLayout } from '@/features/auth/components/common'
 import { PasswordVisibilityToggle } from './PasswordVisibilityToggle.tsx'
 
 export function SignInForm() {
