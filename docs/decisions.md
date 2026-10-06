@@ -116,14 +116,14 @@ Additional rules:
 - Dependencies: TanStack Query, `react-router-dom`, React Hook Form, Zod (installed, unused until the first real form), Vitest and the testing libraries above.
 - Composition points: `src/app/AppProviders.tsx`, `src/app/router.tsx`, `src/app/queryClient.ts`.
 - API client convention: `src/lib/api/client.ts` (`apiRequest`, `ApiError`). It reads `VITE_API_URL` on use, prefixes `/api`, always sends cookies, and turns non-2xx responses into `ApiError` from the error envelope.
-- `/` still renders the unmodified Vite template screen; `/auth/sign-up` and `/auth/sign-in` are the first product screens (see §8).
+- `/` is the start screen: it redirects to `/workspaces`, which shows the workspace list or, on its own `401`, redirects to `/auth/sign-in` (see §8). The Vite template screen has been removed.
 
 ## 8. Current implementation
 
 Verified in the repository:
 
 - Backend: FastAPI with `GET /health`; `POST /api/auth/register`; `POST /api/auth/login` (credential verification, session creation, the `HttpOnly`/`SameSite=Lax` session cookie); `POST /api/workspaces` and `GET /api/workspaces` (create, and list the caller's own workspaces with their role and member count), both behind `get_current_user` (`app/api/dependencies.py` — resolves the session cookie, the first code that checks `Session.expires_at`); the `users`, `sessions`, `workspaces`, and `workspace_memberships` tables and their migrations; CORS middleware with a configurable origin allowlist; async SQLAlchemy engine and session foundation; lazy settings; the PostgreSQL test foundation described above.
-- Frontend: the Vite template at `/`, the `/auth/sign-up` screen, the `/auth/sign-in` screen (redirects to `/workspaces` on success), and `/workspaces` — a real screen listing the caller's workspaces (or an empty-state prompt) with a "+ New workspace" modal (name, optional description). An unauthenticated visitor is redirected to `/auth/sign-in` by the list request's own `401`; there is no separate `/api/auth/me` or reusable route-guard yet (see §9).
+- Frontend: `/` as the start screen (redirects to `/workspaces`, so a signed-in user sees the workspace list and a signed-out visitor ends up at sign-in), the `/auth/sign-up` screen, the `/auth/sign-in` screen (redirects to `/workspaces` on success), and `/workspaces` — a real screen listing the caller's workspaces (or an empty-state prompt) with a "+ New workspace" modal (name, optional description). An unauthenticated visitor is redirected to `/auth/sign-in` by the list request's own `401`; there is no separate `/api/auth/me` or reusable route-guard yet (see §9).
 - Docker Compose dev stack: frontend, backend, Postgres.
 
 ## 9. Deferred

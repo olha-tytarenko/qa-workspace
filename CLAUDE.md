@@ -83,7 +83,7 @@ Early scaffold. No product features exist yet. Accepted decisions for the first 
 
 Implemented:
 - Backend: FastAPI app with `GET /health`; async SQLAlchemy + asyncpg engine/session foundation; lazy settings; Alembic configured for the async engine with model discovery via `app/models`; SQLAlchemy conventions (constraint naming, `uuid_pk()`, timezone-aware datetimes) in `app/db/base.py`; PostgreSQL test foundation (separate `qa_workspace_test` database, migrations applied once per session, rolled-back per-test sessions); Ruff (format + lint) and strict mypy over `app`, `migrations`, `tests`.
-- Frontend: Vite + React with the approved foundation (TanStack Query, `react-router-dom`, React Hook Form, Zod, Vitest, React Testing Library, MSW); provider/route composition and a minimal API client. The only screen is still the Vite template.
+- Frontend: Vite + React with the approved foundation (TanStack Query, `react-router-dom`, React Hook Form, Zod, Vitest, React Testing Library, MSW); provider/route composition and a minimal API client. Screens: `/` (start screen, redirects to `/workspaces`), `/auth/sign-up`, `/auth/sign-in`, `/workspaces`.
 - Docker Compose dev stack (frontend, backend, Postgres).
 
 Not implemented (planned only — inspect the repo before assuming any of it exists):
