@@ -1,6 +1,6 @@
 # QA Workspace frontend
 
-React 19 + TypeScript + Vite. Currently the Vite template screen wrapped in the application foundation; there are no product screens yet.
+React 19 + TypeScript + Vite. Screens: `/` (start screen, redirects to `/workspaces`), `/auth/sign-up`, `/auth/sign-in`, and `/workspaces`.
 
 ## Run
 
