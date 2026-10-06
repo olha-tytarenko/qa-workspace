@@ -13,6 +13,7 @@ from tests.database import TestDatabase
 pytestmark = [pytest.mark.anyio, pytest.mark.integration]
 
 VALID_PASSWORD = "a sufficiently long password"
+TRUSTED_ORIGIN = "http://frontend.test"
 
 
 def unique_email(prefix: str) -> str:
@@ -23,16 +24,20 @@ def app_for(test_database: TestDatabase) -> FastAPI:
     app = create_app()
     app.dependency_overrides[get_settings] = lambda: Settings(
         database_url=test_database.url.render_as_string(hide_password=False),
+        cors_allowed_origins=TRUSTED_ORIGIN,
     )
     return app
 
 
 @asynccontextmanager
 async def running(app: FastAPI) -> AsyncIterator[httpx.AsyncClient]:
+    """A client that behaves like the frontend: it sends the trusted `Origin`."""
     async with app.router.lifespan_context(app):
         transport = httpx.ASGITransport(app=app, raise_app_exceptions=False)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://test"
+            transport=transport,
+            base_url="http://test",
+            headers={"Origin": TRUSTED_ORIGIN},
         ) as client:
             yield client
 
@@ -83,6 +88,33 @@ async def test_unauthenticated_list_returns_401(test_database: TestDatabase) -> 
 
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "UNAUTHENTICATED"
+
+
+# --- origin validation --------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "origin_headers",
+    [{"Origin": "http://evil.example.com"}, {}],
+    ids=["untrusted_origin", "missing_origin"],
+)
+async def test_create_from_an_untrusted_origin_returns_403_and_creates_nothing(
+    test_database: TestDatabase, origin_headers: dict[str, str]
+) -> None:
+    app = app_for(test_database)
+
+    async with running(app) as client:
+        await sign_up_and_sign_in(client, "mallory")
+        del client.headers["Origin"]
+        response = await client.post(
+            "/api/workspaces", json={"name": "Forged"}, headers=origin_headers
+        )
+        client.headers["Origin"] = TRUSTED_ORIGIN
+        listed = await client.get("/api/workspaces")
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "ORIGIN_NOT_ALLOWED"
+    assert listed.json()["items"] == []
 
 
 # --- successful creation ------------------------------------------------------

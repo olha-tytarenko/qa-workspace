@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Cookie, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.dependencies import require_trusted_origin
 from app.core.config import Settings, get_settings
 from app.core.security import SESSION_COOKIE_NAME, SESSION_TTL
 from app.db.session import get_session
@@ -14,6 +15,7 @@ from app.schemas.auth import (
     UserPublic,
 )
 from app.services.login import login_user
+from app.services.logout import logout_session
 from app.services.registration import register_user
 
 router = APIRouter()
@@ -56,3 +58,28 @@ async def login(
         secure=settings.session_cookie_secure,
     )
     return LoginResponse(data=UserPublic.model_validate(user))
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_trusted_origin)],
+)
+async def logout(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    session_token: Annotated[str | None, Cookie(alias=SESSION_COOKIE_NAME)] = None,
+) -> Response:
+    # Idempotent: a missing, unknown or expired cookie still gets 204 and a
+    # cleared cookie, so the client can always reach the signed-out state.
+    if session_token is not None:
+        await logout_session(session, session_token)
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    response.delete_cookie(
+        key=SESSION_COOKIE_NAME,
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=settings.session_cookie_secure,
+    )
+    return response
