@@ -7,3 +7,6 @@ __pycache__/
 .env
 .env.*
 !.env.example
+
+# JetBrains IDE settings are per developer, not project config.
+.idea/
